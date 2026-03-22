@@ -1,5 +1,6 @@
 import { useEffect, useCallback } from 'react'
 import useStore from './store/useStore'
+import { useBreakpoint } from './hooks/useBreakpoint'
 import TopBar from './components/TopBar'
 import Sidebar from './components/Sidebar'
 import Editor from './components/Editor'
@@ -10,21 +11,36 @@ import Settings from './components/Settings'
 import ContextMenu from './components/ContextMenu'
 import Notifications from './components/Notifications'
 import StatusBar from './components/StatusBar'
+import MobileNav from './components/MobileNav'
 
 export default function App() {
   const {
     theme, setPaletteOpen, setSettingsOpen,
     setSidebarOpen, sidebarOpen,
     setTerminalOpen, terminalOpen,
+    setPreviewOpen, previewOpen,
     overlayColor,
   } = useStore()
 
-  // Apply theme on mount and change
+  const { isMobile, isTablet } = useBreakpoint()
+
+  // On mobile/tablet, close panels that don't fit on mount
+  useEffect(() => {
+    if (isMobile) {
+      setSidebarOpen(false)
+      setPreviewOpen(false)
+      setTerminalOpen(false)
+    } else if (isTablet) {
+      setSidebarOpen(false)
+      setPreviewOpen(false)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isMobile, isTablet])
+
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
   }, [theme])
 
-  // Apply saved accent color on mount
   useEffect(() => {
     const OVERLAY_COLORS = [
       { id: 'default', color: '#58a6ff' },
@@ -48,27 +64,18 @@ export default function App() {
     }
   }, [overlayColor])
 
-  // Global keyboard shortcuts
   const handleKeyDown = useCallback((e) => {
-    // Ctrl+Shift+P → command palette
     if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'P') {
-      e.preventDefault()
-      setPaletteOpen(true)
+      e.preventDefault(); setPaletteOpen(true)
     }
-    // Ctrl+, → settings
     if ((e.ctrlKey || e.metaKey) && e.key === ',') {
-      e.preventDefault()
-      setSettingsOpen(true)
+      e.preventDefault(); setSettingsOpen(true)
     }
-    // Ctrl+B → sidebar
     if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
-      e.preventDefault()
-      setSidebarOpen(!sidebarOpen)
+      e.preventDefault(); setSidebarOpen(!sidebarOpen)
     }
-    // Ctrl+` → terminal
     if ((e.ctrlKey || e.metaKey) && e.key === '`') {
-      e.preventDefault()
-      setTerminalOpen(!terminalOpen)
+      e.preventDefault(); setTerminalOpen(!terminalOpen)
     }
   }, [setPaletteOpen, setSettingsOpen, setSidebarOpen, sidebarOpen, setTerminalOpen, terminalOpen])
 
@@ -78,39 +85,93 @@ export default function App() {
   }, [handleKeyDown])
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100vh',
-        width: '100vw',
-        overflow: 'hidden',
-        background: 'var(--bg-primary)',
-        color: 'var(--text-primary)',
-      }}
-    >
-      {/* Top bar */}
+    <div style={{
+      display: 'flex', flexDirection: 'column',
+      height: '100dvh', width: '100vw',
+      overflow: 'hidden',
+      background: 'var(--bg-primary)',
+      color: 'var(--text-primary)',
+    }}>
       <TopBar />
 
-      {/* Main area */}
-      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-        {/* Sidebar */}
-        <Sidebar />
+      <div style={{ display: 'flex', flex: 1, overflow: 'hidden', position: 'relative' }}>
+        {/* Sidebar — drawer on mobile/tablet, inline on desktop */}
+        {isMobile || isTablet ? (
+          <>
+            {/* Backdrop */}
+            {sidebarOpen && (
+              <div
+                onClick={() => setSidebarOpen(false)}
+                style={{
+                  position: 'absolute', inset: 0, zIndex: 40,
+                  background: 'rgba(0,0,0,0.5)',
+                }}
+              />
+            )}
+            {/* Drawer */}
+            <div style={{
+              position: 'absolute', top: 0, left: 0, bottom: 0, zIndex: 50,
+              transform: sidebarOpen ? 'translateX(0)' : 'translateX(-100%)',
+              transition: 'transform 0.22s cubic-bezier(0.4,0,0.2,1)',
+              width: 260,
+            }}>
+              <Sidebar />
+            </div>
+          </>
+        ) : (
+          <Sidebar />
+        )}
 
-        {/* Editor + Terminal column */}
-        <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+        {/* Editor + Terminal */}
+        <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', minWidth: 0 }}>
           <Editor />
-          <Terminal />
+          {!isMobile && <Terminal />}
         </div>
 
-        {/* Preview pane */}
-        <Preview />
+        {/* Preview — drawer on mobile, inline on desktop */}
+        {isMobile ? (
+          <>
+            {previewOpen && (
+              <div
+                onClick={() => setPreviewOpen(false)}
+                style={{
+                  position: 'absolute', inset: 0, zIndex: 40,
+                  background: 'rgba(0,0,0,0.5)',
+                }}
+              />
+            )}
+            <div style={{
+              position: 'absolute', top: 0, right: 0, bottom: 0, zIndex: 50,
+              width: '92vw',
+              transform: previewOpen ? 'translateX(0)' : 'translateX(100%)',
+              transition: 'transform 0.22s cubic-bezier(0.4,0,0.2,1)',
+            }}>
+              <Preview />
+            </div>
+          </>
+        ) : (
+          <Preview />
+        )}
       </div>
 
-      {/* Status bar */}
+      {/* Mobile terminal — bottom sheet */}
+      {isMobile && terminalOpen && (
+        <div style={{
+          position: 'absolute', bottom: 48, left: 0, right: 0, zIndex: 60,
+          maxHeight: '50dvh',
+          borderTop: '1px solid var(--border-color)',
+          background: 'var(--bg-secondary)',
+          display: 'flex', flexDirection: 'column',
+        }}>
+          <Terminal />
+        </div>
+      )}
+
       <StatusBar />
 
-      {/* Overlays */}
+      {/* Mobile bottom nav */}
+      {isMobile && <MobileNav />}
+
       <CommandPalette />
       <Settings />
       <ContextMenu />

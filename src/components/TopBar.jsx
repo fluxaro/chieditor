@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import useStore from '../store/useStore'
 import { buildTree, flattenTree } from '../utils/fileUtils'
+import { useBreakpoint } from '../hooks/useBreakpoint'
 
 const THEMES = [
   { id: 'dark', label: 'Dark' },
@@ -186,6 +187,7 @@ export default function TopBar() {
   } = useStore()
 
   const actions = useMenuActions()
+  const { isMobile, isTablet } = useBreakpoint()
 
   const menus = [
     {
@@ -266,83 +268,103 @@ export default function TopBar() {
           </span>
         </div>
 
-        {/* Menu bar */}
-        {menus.map(m => (
+        {/* Menu bar — hidden on mobile */}
+        {!isMobile && menus.map(m => (
           <MenuDropdown key={m.label} label={m.label} items={m.items} />
         ))}
 
-        {/* Folder loading indicator */}
         {folderLoading && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginLeft: 8, color: 'var(--text-muted)', fontSize: 11 }}>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2.5" style={{ animation: 'spin 1s linear infinite' }}>
               <path d="M21 12a9 9 0 1 1-6.219-8.56" />
             </svg>
-            <span>Loading…</span>
+            {!isMobile && <span>Loading…</span>}
           </div>
         )}
       </div>
 
-      {/* Center: command palette trigger */}
-      <button
-        onClick={() => setPaletteOpen(true)}
-        className="flex items-center gap-2 px-3 py-1 rounded"
-        style={{
-          background: 'var(--bg-tertiary)',
-          border: '1px solid var(--border-color)',
-          color: 'var(--text-muted)',
-          fontSize: 12,
-          minWidth: 200,
-        }}
-        onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--accent)'}
-        onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border-color)'}
-      >
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
-        </svg>
-        <span>Search commands...</span>
-        <span className="ml-auto" style={{ fontSize: 10, opacity: 0.6 }}>Ctrl+Shift+P</span>
-      </button>
-
-      {/* Right: controls */}
-      <div className="flex items-center gap-1">
-        <TopBtn title="Toggle Sidebar (Ctrl+B)" active={sidebarOpen} onClick={() => setSidebarOpen(!sidebarOpen)}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <rect x="3" y="3" width="18" height="18" rx="2" /><path d="M9 3v18" />
-          </svg>
-        </TopBtn>
-        <TopBtn title="Toggle Preview" active={previewOpen} onClick={() => setPreviewOpen(!previewOpen)}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <rect x="2" y="3" width="20" height="14" rx="2" /><path d="M8 21h8M12 17v4" />
-          </svg>
-        </TopBtn>
-        <TopBtn title="Toggle Terminal (Ctrl+`)" active={terminalOpen} onClick={() => setTerminalOpen(!terminalOpen)}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <polyline points="4 17 10 11 4 5" /><line x1="12" y1="19" x2="20" y2="19" />
-          </svg>
-        </TopBtn>
-        <div style={{ width: 1, height: 16, background: 'var(--border-color)', margin: '0 4px' }} />
-        <select
-          value={theme}
-          onChange={e => setTheme(e.target.value)}
+      {/* Center: search — hidden on mobile (use bottom nav search instead) */}
+      {!isMobile && (
+        <button
+          onClick={() => setPaletteOpen(true)}
+          className="flex items-center gap-2 px-3 py-1 rounded"
           style={{
             background: 'var(--bg-tertiary)',
             border: '1px solid var(--border-color)',
-            color: 'var(--text-secondary)',
-            fontSize: 11,
-            padding: '2px 6px',
-            borderRadius: 4,
-            cursor: 'pointer',
-            outline: 'none',
+            color: 'var(--text-muted)',
+            fontSize: 12,
+            minWidth: isTablet ? 140 : 200,
           }}
+          onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--accent)'}
+          onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border-color)'}
         >
-          {THEMES.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
-        </select>
-        <TopBtn title="Settings (Ctrl+,)" onClick={() => setSettingsOpen(true)}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="12" cy="12" r="3" />
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
           </svg>
-        </TopBtn>
+          <span>Search commands...</span>
+          {!isTablet && <span className="ml-auto" style={{ fontSize: 10, opacity: 0.6 }}>Ctrl+Shift+P</span>}
+        </button>
+      )}
+
+      {/* Right: controls */}
+      <div className="flex items-center gap-1">
+        {/* On mobile show open-folder + settings only */}
+        {isMobile ? (
+          <>
+            <TopBtn title="Open Folder" onClick={actions.openFolder}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+              </svg>
+            </TopBtn>
+            <TopBtn title="Settings" onClick={() => setSettingsOpen(true)}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="3" />
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+              </svg>
+            </TopBtn>
+          </>
+        ) : (
+          <>
+            <TopBtn title="Toggle Sidebar (Ctrl+B)" active={sidebarOpen} onClick={() => setSidebarOpen(!sidebarOpen)}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="3" y="3" width="18" height="18" rx="2" /><path d="M9 3v18" />
+              </svg>
+            </TopBtn>
+            <TopBtn title="Toggle Preview" active={previewOpen} onClick={() => setPreviewOpen(!previewOpen)}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="2" y="3" width="20" height="14" rx="2" /><path d="M8 21h8M12 17v4" />
+              </svg>
+            </TopBtn>
+            <TopBtn title="Toggle Terminal (Ctrl+`)" active={terminalOpen} onClick={() => setTerminalOpen(!terminalOpen)}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <polyline points="4 17 10 11 4 5" /><line x1="12" y1="19" x2="20" y2="19" />
+              </svg>
+            </TopBtn>
+            <div style={{ width: 1, height: 16, background: 'var(--border-color)', margin: '0 4px' }} />
+            <select
+              value={theme}
+              onChange={e => setTheme(e.target.value)}
+              style={{
+                background: 'var(--bg-tertiary)',
+                border: '1px solid var(--border-color)',
+                color: 'var(--text-secondary)',
+                fontSize: 11,
+                padding: '2px 6px',
+                borderRadius: 4,
+                cursor: 'pointer',
+                outline: 'none',
+              }}
+            >
+              {THEMES.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
+            </select>
+            <TopBtn title="Settings (Ctrl+,)" onClick={() => setSettingsOpen(true)}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="3" />
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+              </svg>
+            </TopBtn>
+          </>
+        )}
       </div>
     </header>
   )

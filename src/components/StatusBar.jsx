@@ -1,7 +1,9 @@
 import useStore from '../store/useStore'
+import { useBreakpoint } from '../hooks/useBreakpoint'
 
 export default function StatusBar() {
   const { getActiveTab, theme, openedFolder, tabs } = useStore()
+  const { isMobile } = useBreakpoint()
   const activeTab = getActiveTab()
 
   return (
@@ -16,7 +18,6 @@ export default function StatusBar() {
         userSelect: 'none',
       }}
     >
-      {/* Left */}
       <div className="flex items-center gap-3">
         <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -24,23 +25,26 @@ export default function StatusBar() {
           </svg>
           {openedFolder ? openedFolder.name : 'No folder'}
         </span>
-        {tabs.length > 0 && (
+        {!isMobile && tabs.length > 0 && (
           <span>{tabs.length} file{tabs.length !== 1 ? 's' : ''} open</span>
         )}
       </div>
 
-      {/* Right */}
       <div className="flex items-center gap-3">
         {activeTab && (
           <>
-            <span>{activeTab.language}</span>
-            <span style={{ opacity: 0.7 }}>|</span>
+            {!isMobile && <span>{activeTab.language}</span>}
+            {!isMobile && <span style={{ opacity: 0.7 }}>|</span>}
             <span>{activeTab.name}</span>
-            {activeTab.unsaved && <span style={{ opacity: 0.8 }}>● unsaved</span>}
+            {activeTab.unsaved && <span style={{ opacity: 0.8 }}>●</span>}
           </>
         )}
-        <span style={{ opacity: 0.7 }}>|</span>
-        <span style={{ textTransform: 'capitalize' }}>{theme}</span>
+        {!isMobile && (
+          <>
+            <span style={{ opacity: 0.7 }}>|</span>
+            <span style={{ textTransform: 'capitalize' }}>{theme}</span>
+          </>
+        )}
         <span style={{ opacity: 0.7 }}>Chiditor</span>
       </div>
     </div>

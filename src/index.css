@@ -177,6 +177,15 @@
     background: var(--bg-primary);
     color: var(--text-primary);
     font-family: var(--ui-font);
+    /* Prevent iOS bounce scroll */
+    overscroll-behavior: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Ensure touch targets are large enough */
+  button {
+    min-height: 28px;
+    touch-action: manipulation;
   }
 
   /* Scrollbar styling */
