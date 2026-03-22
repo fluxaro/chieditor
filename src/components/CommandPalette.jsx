@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useMemo } from 'react'
 import Fuse from 'fuse.js'
 import useStore from '../store/useStore'
 import { readFileContent, getLanguage } from '../utils/fileUtils'
+import { useBreakpoint } from '../hooks/useBreakpoint'
 
 const STATIC_COMMANDS = [
   { id: 'toggle-preview', label: 'Toggle Preview', icon: '🖥', category: 'View' },
@@ -32,6 +33,8 @@ export default function CommandPalette() {
     setOpenedFolder, setFileTree, setFlatFiles, setDirectoryHandle,
     addNotification,
   } = useStore()
+
+  const { isMobile } = useBreakpoint()
 
   const [query, setQuery] = useState('')
   const [selected, setSelected] = useState(0)
@@ -139,19 +142,29 @@ export default function CommandPalette() {
   return (
     <div
       className="fixed inset-0 flex items-start justify-center"
-      style={{ zIndex: 9998, paddingTop: 80, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(2px)' }}
+      style={{
+        zIndex: 9998,
+        paddingTop: isMobile ? 0 : 72,
+        background: 'rgba(0,0,0,0.55)',
+        backdropFilter: 'blur(3px)',
+        animation: 'fadeIn 0.15s ease',
+      }}
       onMouseDown={e => { if (e.target === e.currentTarget) setPaletteOpen(false) }}
     >
       <div
         style={{
-          width: 560,
-          maxWidth: '90vw',
+          width: isMobile ? '100vw' : 'min(560px, 94vw)',
+          height: isMobile ? '100dvh' : 'auto',
+          maxHeight: isMobile ? '100dvh' : '70vh',
           background: 'var(--bg-tertiary)',
-          border: '1px solid var(--border-color)',
-          borderRadius: 10,
+          border: isMobile ? 'none' : '1px solid var(--border-color)',
+          borderRadius: isMobile ? 0 : 10,
           boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
           overflow: 'hidden',
           fontFamily: 'var(--ui-font)',
+          display: 'flex',
+          flexDirection: 'column',
+          animation: isMobile ? 'slideInUp 0.22s cubic-bezier(0.4,0,0.2,1)' : 'fadeIn 0.15s ease',
         }}
       >
         {/* Search input */}
@@ -178,7 +191,7 @@ export default function CommandPalette() {
         </div>
 
         {/* Results */}
-        <div ref={listRef} style={{ maxHeight: 360, overflowY: 'auto' }}>
+        <div ref={listRef} style={{ flex: 1, overflowY: 'auto', maxHeight: isMobile ? undefined : 360 }}>
           {results.length === 0 ? (
             <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
               No results for "{query}"

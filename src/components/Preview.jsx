@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import useStore from '../store/useStore'
+import { useBreakpoint } from '../hooks/useBreakpoint'
 
 // ─── Binary file extensions that need blob URLs ────────────────────────────
 const BINARY_EXTS = new Set(['png','jpg','jpeg','gif','webp','ico','bmp','avif','pdf','mp4','webm','ogg','mp3','wav','woff','woff2','ttf','otf','eot'])
@@ -174,8 +175,8 @@ async function replaceAsync(str, re, asyncFn) {
 
 export default function Preview() {
   const { previewOpen, tabs, activeTabId, setPreviewOpen, imageDataMap, fileRegistry, flatFiles } = useStore()
+  const { isMobile } = useBreakpoint()
   const iframeRef = useRef(null)
-  // null = auto (index.html); string = user manually picked a tab id
   const [pinnedTabId, setPinnedTabId] = useState(null)
   const [autoRefresh, setAutoRefresh] = useState(true)
   const [consoleOpen, setConsoleOpen] = useState(false)
@@ -268,11 +269,22 @@ export default function Preview() {
   if (!previewOpen) return null
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', flexShrink: 0, width, minWidth: 240, borderLeft: '1px solid var(--border-color)', background: 'var(--bg-secondary)', overflow: 'hidden', position: 'relative' }}>
-      {/* Resize handle */}
-      <div onMouseDown={startResize} style={{ position: 'absolute', left: 0, top: 0, width: 4, height: '100%', cursor: 'col-resize', zIndex: 10 }}
-        onMouseEnter={e => e.currentTarget.style.background = 'var(--accent)'}
-        onMouseLeave={e => e.currentTarget.style.background = 'transparent'} />
+    <div style={{
+      display: 'flex', flexDirection: 'column', flexShrink: 0,
+      width: isMobile ? '100%' : width,
+      minWidth: isMobile ? 0 : 240,
+      height: '100%',
+      borderLeft: isMobile ? 'none' : '1px solid var(--border-color)',
+      background: 'var(--bg-secondary)',
+      overflow: 'hidden',
+      position: 'relative',
+    }}>
+      {/* Resize handle — desktop only */}
+      {!isMobile && (
+        <div onMouseDown={startResize} style={{ position: 'absolute', left: 0, top: 0, width: 4, height: '100%', cursor: 'col-resize', zIndex: 10 }}
+          onMouseEnter={e => e.currentTarget.style.background = 'var(--accent)'}
+          onMouseLeave={e => e.currentTarget.style.background = 'transparent'} />
+      )}
 
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 12px', height: 36, flexShrink: 0, borderBottom: '1px solid var(--border-color)', background: 'var(--bg-tertiary)', gap: 8 }}>
@@ -281,7 +293,7 @@ export default function Preview() {
             <rect x="2" y="3" width="20" height="14" rx="2" /><path d="M8 21h8M12 17v4" />
           </svg>
           <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--text-secondary)', fontFamily: 'var(--ui-font)' }}>Preview</span>
-          <span style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: 'var(--ui-font)' }}>{width}px</span>
+          {!isMobile && <span style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: 'var(--ui-font)' }}>{width}px</span>}
           {building && <span style={{ fontSize: 10, color: 'var(--accent)', fontFamily: 'var(--ui-font)' }}>building…</span>}
         </div>
 

@@ -13,52 +13,44 @@
     --editor-font-size: 14px;
     --terminal-font-size: 13px;
 
-    /* Panel colors */
     --bg-primary: #0f1117;
     --bg-secondary: #161b22;
     --bg-tertiary: #1c2128;
     --bg-hover: #21262d;
     --bg-active: #2d333b;
 
-    /* Border */
     --border-color: #30363d;
     --border-subtle: #21262d;
 
-    /* Text */
     --text-primary: #e6edf3;
     --text-secondary: #8b949e;
     --text-muted: #484f58;
     --text-accent: #58a6ff;
 
-    /* Accent */
     --accent: #58a6ff;
     --accent-hover: #79b8ff;
     --accent-subtle: #1f3a5f;
 
-    /* Status colors */
     --color-success: #3fb950;
     --color-warning: #d29922;
     --color-error: #f85149;
     --color-info: #58a6ff;
 
-    /* Tab */
     --tab-active-bg: #0f1117;
     --tab-inactive-bg: #161b22;
     --tab-border: #58a6ff;
 
-    /* Scrollbar */
     --scrollbar-track: #161b22;
     --scrollbar-thumb: #30363d;
     --scrollbar-thumb-hover: #484f58;
 
-    /* Sidebar width */
     --sidebar-width: 240px;
     --topbar-height: 40px;
     --tab-height: 36px;
     --statusbar-height: 24px;
+    --mobile-nav-height: 52px;
   }
 
-  /* Light theme */
   [data-theme="light"] {
     --bg-primary: #ffffff;
     --bg-secondary: #f6f8fa;
@@ -82,7 +74,6 @@
     --scrollbar-thumb-hover: #9198a1;
   }
 
-  /* Dracula theme */
   [data-theme="dracula"] {
     --bg-primary: #282a36;
     --bg-secondary: #21222c;
@@ -104,7 +95,6 @@
     --scrollbar-thumb: #44475a;
   }
 
-  /* Monokai theme */
   [data-theme="monokai"] {
     --bg-primary: #272822;
     --bg-secondary: #1e1f1c;
@@ -126,7 +116,6 @@
     --scrollbar-thumb: #49483e;
   }
 
-  /* Nord theme */
   [data-theme="nord"] {
     --bg-primary: #2e3440;
     --bg-secondary: #272c36;
@@ -148,7 +137,6 @@
     --scrollbar-thumb: #3b4252;
   }
 
-  /* Solarized Dark */
   [data-theme="solarized"] {
     --bg-primary: #002b36;
     --bg-secondary: #073642;
@@ -177,41 +165,43 @@
     background: var(--bg-primary);
     color: var(--text-primary);
     font-family: var(--ui-font);
-    /* Prevent iOS bounce scroll */
     overscroll-behavior: none;
     -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
   }
 
-  /* Ensure touch targets are large enough */
   button {
-    min-height: 28px;
     touch-action: manipulation;
   }
 
-  /* Scrollbar styling */
-  ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-  ::-webkit-scrollbar-track {
-    background: var(--scrollbar-track);
-  }
-  ::-webkit-scrollbar-thumb {
-    background: var(--scrollbar-thumb);
-    border-radius: 3px;
-  }
-  ::-webkit-scrollbar-thumb:hover {
-    background: var(--scrollbar-thumb-hover);
-  }
+  /* Thin scrollbars */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: var(--scrollbar-track); }
+  ::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-thumb-hover); }
 
-  /* Selection */
-  ::selection {
-    background: var(--accent-subtle);
-    color: var(--text-primary);
-  }
+  ::selection { background: var(--accent-subtle); color: var(--text-primary); }
 
   @keyframes spin {
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }
+  }
+
+  /* Slide-in animations for drawers */
+  @keyframes slideInLeft {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(0); }
+  }
+  @keyframes slideInRight {
+    from { transform: translateX(100%); }
+    to { transform: translateX(0); }
+  }
+  @keyframes slideInUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
   }
 }

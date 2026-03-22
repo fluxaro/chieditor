@@ -1,9 +1,11 @@
 import { useRef } from 'react'
 import useStore from '../store/useStore'
 import { FileIcon } from './FileIcon'
+import { useBreakpoint } from '../hooks/useBreakpoint'
 
 export default function TabBar() {
   const { tabs, activeTabId, setActiveTab, closeTab } = useStore()
+  const { isMobile } = useBreakpoint()
   const scrollRef = useRef(null)
 
   if (tabs.length === 0) return null
@@ -20,10 +22,11 @@ export default function TabBar() {
       onWheel={handleWheel}
       className="flex items-end overflow-x-auto shrink-0"
       style={{
-        height: 'var(--tab-height)',
+        height: isMobile ? 42 : 'var(--tab-height)',
         background: 'var(--bg-secondary)',
         borderBottom: '1px solid var(--border-color)',
         scrollbarWidth: 'none',
+        WebkitOverflowScrolling: 'touch',
       }}
     >
       {tabs.map(tab => (

@@ -13,6 +13,21 @@ import Notifications from './components/Notifications'
 import StatusBar from './components/StatusBar'
 import MobileNav from './components/MobileNav'
 
+const OVERLAY_COLORS = [
+  { id: 'default', color: '#58a6ff' },
+  { id: 'emerald', color: '#10b981' },
+  { id: 'violet', color: '#8b5cf6' },
+  { id: 'rose', color: '#f43f5e' },
+  { id: 'amber', color: '#f59e0b' },
+  { id: 'cyan', color: '#06b6d4' },
+  { id: 'orange', color: '#f97316' },
+  { id: 'pink', color: '#ec4899' },
+  { id: 'lime', color: '#84cc16' },
+  { id: 'indigo', color: '#6366f1' },
+  { id: 'teal', color: '#14b8a6' },
+  { id: 'sky', color: '#0ea5e9' },
+]
+
 export default function App() {
   const {
     theme, setPaletteOpen, setSettingsOpen,
@@ -24,7 +39,7 @@ export default function App() {
 
   const { isMobile, isTablet } = useBreakpoint()
 
-  // On mobile/tablet, close panels that don't fit on mount
+  // Close panels that don't fit when screen shrinks
   useEffect(() => {
     if (isMobile) {
       setSidebarOpen(false)
@@ -42,20 +57,6 @@ export default function App() {
   }, [theme])
 
   useEffect(() => {
-    const OVERLAY_COLORS = [
-      { id: 'default', color: '#58a6ff' },
-      { id: 'emerald', color: '#10b981' },
-      { id: 'violet', color: '#8b5cf6' },
-      { id: 'rose', color: '#f43f5e' },
-      { id: 'amber', color: '#f59e0b' },
-      { id: 'cyan', color: '#06b6d4' },
-      { id: 'orange', color: '#f97316' },
-      { id: 'pink', color: '#ec4899' },
-      { id: 'lime', color: '#84cc16' },
-      { id: 'indigo', color: '#6366f1' },
-      { id: 'teal', color: '#14b8a6' },
-      { id: 'sky', color: '#0ea5e9' },
-    ]
     const found = OVERLAY_COLORS.find(c => c.id === overlayColor)
     if (found && overlayColor !== 'default') {
       document.documentElement.style.setProperty('--accent', found.color)
@@ -65,24 +66,18 @@ export default function App() {
   }, [overlayColor])
 
   const handleKeyDown = useCallback((e) => {
-    if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'P') {
-      e.preventDefault(); setPaletteOpen(true)
-    }
-    if ((e.ctrlKey || e.metaKey) && e.key === ',') {
-      e.preventDefault(); setSettingsOpen(true)
-    }
-    if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
-      e.preventDefault(); setSidebarOpen(!sidebarOpen)
-    }
-    if ((e.ctrlKey || e.metaKey) && e.key === '`') {
-      e.preventDefault(); setTerminalOpen(!terminalOpen)
-    }
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'P') { e.preventDefault(); setPaletteOpen(true) }
+    if ((e.ctrlKey || e.metaKey) && e.key === ',') { e.preventDefault(); setSettingsOpen(true) }
+    if ((e.ctrlKey || e.metaKey) && e.key === 'b') { e.preventDefault(); setSidebarOpen(!sidebarOpen) }
+    if ((e.ctrlKey || e.metaKey) && e.key === '`') { e.preventDefault(); setTerminalOpen(!terminalOpen) }
   }, [setPaletteOpen, setSettingsOpen, setSidebarOpen, sidebarOpen, setTerminalOpen, terminalOpen])
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [handleKeyDown])
+
+  const isSmall = isMobile || isTablet
 
   return (
     <div style={{
@@ -94,26 +89,28 @@ export default function App() {
     }}>
       <TopBar />
 
-      <div style={{ display: 'flex', flex: 1, overflow: 'hidden', position: 'relative' }}>
-        {/* Sidebar — drawer on mobile/tablet, inline on desktop */}
-        {isMobile || isTablet ? (
+      {/* ── Main workspace ── */}
+      <div style={{ display: 'flex', flex: 1, overflow: 'hidden', position: 'relative', minHeight: 0 }}>
+
+        {/* Sidebar */}
+        {isSmall ? (
           <>
-            {/* Backdrop */}
             {sidebarOpen && (
               <div
                 onClick={() => setSidebarOpen(false)}
                 style={{
                   position: 'absolute', inset: 0, zIndex: 40,
-                  background: 'rgba(0,0,0,0.5)',
+                  background: 'rgba(0,0,0,0.55)',
+                  animation: 'fadeIn 0.18s ease',
                 }}
               />
             )}
-            {/* Drawer */}
             <div style={{
               position: 'absolute', top: 0, left: 0, bottom: 0, zIndex: 50,
+              width: 'min(280px, 80vw)',
               transform: sidebarOpen ? 'translateX(0)' : 'translateX(-100%)',
-              transition: 'transform 0.22s cubic-bezier(0.4,0,0.2,1)',
-              width: 260,
+              transition: 'transform 0.24s cubic-bezier(0.4,0,0.2,1)',
+              willChange: 'transform',
             }}>
               <Sidebar />
             </div>
@@ -128,7 +125,7 @@ export default function App() {
           {!isMobile && <Terminal />}
         </div>
 
-        {/* Preview — drawer on mobile, inline on desktop */}
+        {/* Preview */}
         {isMobile ? (
           <>
             {previewOpen && (
@@ -136,15 +133,17 @@ export default function App() {
                 onClick={() => setPreviewOpen(false)}
                 style={{
                   position: 'absolute', inset: 0, zIndex: 40,
-                  background: 'rgba(0,0,0,0.5)',
+                  background: 'rgba(0,0,0,0.55)',
+                  animation: 'fadeIn 0.18s ease',
                 }}
               />
             )}
             <div style={{
               position: 'absolute', top: 0, right: 0, bottom: 0, zIndex: 50,
-              width: '92vw',
+              width: 'min(360px, 96vw)',
               transform: previewOpen ? 'translateX(0)' : 'translateX(100%)',
-              transition: 'transform 0.22s cubic-bezier(0.4,0,0.2,1)',
+              transition: 'transform 0.24s cubic-bezier(0.4,0,0.2,1)',
+              willChange: 'transform',
             }}>
               <Preview />
             </div>
@@ -156,20 +155,32 @@ export default function App() {
 
       {/* Mobile terminal — bottom sheet */}
       {isMobile && terminalOpen && (
-        <div style={{
-          position: 'absolute', bottom: 48, left: 0, right: 0, zIndex: 60,
-          maxHeight: '50dvh',
-          borderTop: '1px solid var(--border-color)',
-          background: 'var(--bg-secondary)',
-          display: 'flex', flexDirection: 'column',
-        }}>
-          <Terminal />
-        </div>
+        <>
+          <div
+            onClick={() => setTerminalOpen(false)}
+            style={{
+              position: 'fixed', inset: 0, zIndex: 55,
+              background: 'rgba(0,0,0,0.45)',
+              animation: 'fadeIn 0.18s ease',
+            }}
+          />
+          <div style={{
+            position: 'fixed', left: 0, right: 0,
+            bottom: 'var(--mobile-nav-height)',
+            zIndex: 60,
+            maxHeight: '55dvh',
+            borderTop: '1px solid var(--border-color)',
+            background: 'var(--bg-secondary)',
+            borderRadius: '12px 12px 0 0',
+            overflow: 'hidden',
+            animation: 'slideInUp 0.22s cubic-bezier(0.4,0,0.2,1)',
+          }}>
+            <Terminal />
+          </div>
+        </>
       )}
 
       <StatusBar />
-
-      {/* Mobile bottom nav */}
       {isMobile && <MobileNav />}
 
       <CommandPalette />

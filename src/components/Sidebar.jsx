@@ -2,6 +2,7 @@ import { useState, useRef, useCallback } from 'react'
 import useStore, { registerHandle } from '../store/useStore'
 import { FileIcon, FolderIcon } from './FileIcon'
 import { readFileContent, getLanguage, buildTree, flattenTree, buildImageDataMap, buildFileRegistry, isImageFile, readImageAsDataURL } from '../utils/fileUtils'
+import { useBreakpoint } from '../hooks/useBreakpoint'
 
 export default function Sidebar() {
   const {
@@ -18,6 +19,7 @@ export default function Sidebar() {
   const [renameValue, setRenameValue] = useState('')
   const resizerRef = useRef(null)
   const isResizing = useRef(false)
+  const { isMobile } = useBreakpoint()
 
   // ── Resize sidebar ──────────────────────────────────────────────────────
   const startResize = useCallback((ev) => {
@@ -88,10 +90,11 @@ export default function Sidebar() {
     <aside
       className="flex flex-col shrink-0 relative overflow-hidden"
       style={{
-        width: sidebarWidth,
-        minWidth: sidebarWidth,
+        width: isMobile ? '100%' : sidebarWidth,
+        minWidth: isMobile ? 0 : sidebarWidth,
+        height: '100%',
         background: 'var(--bg-secondary)',
-        borderRight: '1px solid var(--border-color)',
+        borderRight: isMobile ? 'none' : '1px solid var(--border-color)',
         fontFamily: 'var(--ui-font)',
       }}
     >
@@ -166,15 +169,17 @@ export default function Sidebar() {
         )}
       </div>
 
-      {/* Resize handle */}
-      <div
-        ref={resizerRef}
-        onMouseDown={startResize}
-        className="absolute top-0 right-0 h-full cursor-col-resize"
-        style={{ width: 4, zIndex: 10 }}
-        onMouseEnter={e => e.currentTarget.style.background = 'var(--accent)'}
-        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-      />
+      {/* Resize handle — desktop only */}
+      {!isMobile && (
+        <div
+          ref={resizerRef}
+          onMouseDown={startResize}
+          className="absolute top-0 right-0 h-full cursor-col-resize"
+          style={{ width: 4, zIndex: 10 }}
+          onMouseEnter={e => e.currentTarget.style.background = 'var(--accent)'}
+          onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+        />
+      )}
     </aside>
   )
 }
@@ -209,8 +214,10 @@ function TreeNode({ node, depth, expandedDirs, toggleDir, openFile, handleContex
   const isExpanded = expandedDirs.has(node.path)
   const isActive = activeTabId === node.path
   const isRenaming = renamingNode?.path === node.path
+  const { isMobile } = useBreakpoint()
 
   const indent = depth * 12 + 8
+  const rowHeight = isMobile ? 36 : 24
 
   async function commitRename() {
     if (!renameValue.trim() || renameValue === node.name) {
@@ -233,7 +240,7 @@ function TreeNode({ node, depth, expandedDirs, toggleDir, openFile, handleContex
         style={{
           paddingLeft: indent,
           paddingRight: 8,
-          height: 24,
+          height: rowHeight,
           fontSize: 13,
           background: isActive ? 'var(--bg-active)' : 'transparent',
           color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
@@ -321,7 +328,8 @@ function TreeNode({ node, depth, expandedDirs, toggleDir, openFile, handleContex
 }
 
 function EmptyState() {
-  const { setOpenedFolder, setFileTree, setFlatFiles, setDirectoryHandle, addNotification, setImageDataMap, setFileRegistry } = useStore()
+  const { setOpenedFolder, setFileTree, setFlatFiles, setDirectoryHandle, addNotification, setImageDataMap, setFileRegistry, setSidebarOpen } = useStore()
+  const { isMobile } = useBreakpoint()
 
   async function openFolder() {
     try {
@@ -335,6 +343,7 @@ function EmptyState() {
       setFileRegistry(buildFileRegistry(tree))
       addNotification(`Opened: ${dirHandle.name}`, 'success')
       buildImageDataMap(tree).then(setImageDataMap)
+      if (isMobile) setSidebarOpen(false)
     } catch (e) {
       if (e.name !== 'AbortError') addNotification('Failed to open folder', 'error')
     }

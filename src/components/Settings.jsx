@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import useStore from '../store/useStore'
+import { useBreakpoint } from '../hooks/useBreakpoint'
 
 const EDITOR_FONTS = [
   { label: 'JetBrains Mono', value: "'JetBrains Mono', monospace" },
@@ -57,6 +58,7 @@ export default function Settings() {
   } = useStore()
 
   const [activeTab, setActiveTab] = useState('Editor')
+  const { isMobile } = useBreakpoint()
 
   if (!settingsOpen) return null
 
@@ -71,23 +73,29 @@ export default function Settings() {
 
   return (
     <div
-      className="fixed inset-0 flex items-center justify-center"
-      style={{ zIndex: 9997, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(3px)' }}
+      className="fixed inset-0 flex items-end justify-center"
+      style={{
+        zIndex: 9997,
+        background: 'rgba(0,0,0,0.6)',
+        backdropFilter: 'blur(3px)',
+        animation: 'fadeIn 0.15s ease',
+        alignItems: isMobile ? 'flex-end' : 'center',
+      }}
       onMouseDown={e => { if (e.target === e.currentTarget) setSettingsOpen(false) }}
     >
       <div
         style={{
-          width: 640,
-          maxWidth: '92vw',
-          maxHeight: '80vh',
+          width: isMobile ? '100vw' : 'min(640px, 94vw)',
+          maxHeight: isMobile ? '92dvh' : '82vh',
           background: 'var(--bg-secondary)',
-          border: '1px solid var(--border-color)',
-          borderRadius: 10,
+          border: isMobile ? 'none' : '1px solid var(--border-color)',
+          borderRadius: isMobile ? '16px 16px 0 0' : 10,
           boxShadow: '0 24px 64px rgba(0,0,0,0.5)',
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
           fontFamily: 'var(--ui-font)',
+          animation: isMobile ? 'slideInUp 0.24s cubic-bezier(0.4,0,0.2,1)' : 'fadeIn 0.15s ease',
         }}
       >
         {/* Header */}
@@ -199,7 +207,7 @@ export default function Settings() {
           )}
 
           {activeTab === 'Themes' && (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12 }}>
               {THEMES.map(t => (
                 <button
                   key={t.id}

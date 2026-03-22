@@ -1,4 +1,5 @@
 import useStore from '../store/useStore'
+import { useBreakpoint } from '../hooks/useBreakpoint'
 
 const ICONS = {
   success: (
@@ -33,6 +34,7 @@ const COLORS = {
 
 export default function Notifications() {
   const { notifications } = useStore()
+  const { isMobile } = useBreakpoint()
 
   if (notifications.length === 0) return null
 
@@ -40,8 +42,9 @@ export default function Notifications() {
     <div
       style={{
         position: 'fixed',
-        bottom: 32,
+        bottom: isMobile ? 'calc(var(--mobile-nav-height) + 8px)' : 32,
         right: 16,
+        left: isMobile ? 16 : 'auto',
         zIndex: 99999,
         display: 'flex',
         flexDirection: 'column',
